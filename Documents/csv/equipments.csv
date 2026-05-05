@@ -1,0 +1,11 @@
+name,brand,model,serial_number,type,status,purchase_date,warranty_months,supplier
+Laptop RH Dev,Dell,Latitude 5540,1001-DELL-5540-A,laptop,active,2023-03-15,24,Dell France
+Laptop Compta,HP,EliteBook 840 G10,1002-HP-840G10-B,laptop,active,2023-06-01,24,HP Store
+Desktop Direction,Apple,Mac Mini M2,1003-APPL-MINI-C,desktop,active,2022-11-20,12,Apple Business
+Serveur Prod,Dell,PowerEdge R750,1004-DELL-R750-D,server,active,2022-01-10,36,Dell France
+Laptop IT Admin,Lenovo,ThinkPad X1 Carbon,1005-LNVO-X1C-E,laptop,in_repair,2021-09-05,24,Lenovo Pro
+Desktop Accueil,HP,ProDesk 400 G9,1006-HP-PD400-F,desktop,in_stock,2024-01-18,24,HP Store
+Laptop Stagiaire,Asus,ExpertBook B1,1007-ASUS-EB1-G,laptop,in_stock,2023-12-01,12,Asus Business
+Serveur Backup,Lenovo,ThinkSystem SR650,1008-LNVO-SR650-H,server,active,2021-04-22,36,Lenovo Pro
+Desktop Dev,Apple,iMac 24 M3,1009-APPL-IMAC-I,desktop,active,2024-02-28,12,Apple Business
+Laptop Retraite,HP,ProBook 450 G7,1010-HP-PB450-J,laptop,retired,2019-05-10,24,HP Store
