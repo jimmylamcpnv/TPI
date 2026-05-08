@@ -6,7 +6,7 @@ import bcrypt
 .eq() = where
 """
 # ── CREATE ────────────────────────────────────────
-# creer un user (username, password, role)
+# create a user (username, password, role)
 def create_user(username, password, role):
     supabase.table("users").insert({
         "username": username,
@@ -15,16 +15,22 @@ def create_user(username, password, role):
     }).execute()
 
 # ── READ ──────────────────────────────────────────
-# avoir le user depuis le username pour le login
+# get all info abount a user with the username
 def get_user_info(username):
-    return supabase.table("users").select("*").eq("username", username).execute().data
-
-# avoir tt les users pour afficher la liste des users dans la page users
-def get_all_users():
-    return supabase.table("users").select("*").execute().data
+    if not username:
+        return supabase.table("users").select("*").execute().data
+    
+    return supabase.table("users").select("*").ilike("username", f"%{username}%").execute().data
 
 # ── UPDATE ────────────────────────────────────────
-# modifier user (username, role)
+# update user datas
+def update_user(username, role):
+    supabase.table("users").update({
+        "username"  : username,
+        "role"      : role
+    }
+    )
+
 # modifier le mdp du user via le id
 def update_password(username, new_password):
     user = get_user_info(username)

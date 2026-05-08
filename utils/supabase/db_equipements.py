@@ -2,9 +2,25 @@ from utils.supabase.db_connexion import supabase  # ✅
 from utils.supabase.db_users import *
 # Equipements
 # ── READ ──────────────────────────────────────────
-# all equipments data in a list
-def get_all_equipements():
-    return supabase.table("equipments").select("*").execute().data
+def global_search(search_option):
+    # if no result, display everything
+    if not search_option:
+        return supabase.table("equipments").select("*").execute().data
+    
+    return (
+        supabase.table("equipments")
+        .select("*")
+        .or_(
+            f"name.ilike.%{search_option}%,"
+            f"brand.ilike.%{search_option}%,"
+            f"model.ilike.%{search_option}%,"
+            f"serial_number.ilike.%{search_option}%,"
+            f"type.ilike.%{search_option}%,"
+            f"status.ilike.%{search_option}%"
+        )
+        .execute()
+        .data
+    )
 
 # ── CREATE ────────────────────────────────────────
 def create_equipment(device_name, brand, model, serial_number, type, status, assigned_user_id, purchase_date, warranty_months, supplier):

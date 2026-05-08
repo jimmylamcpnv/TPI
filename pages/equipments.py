@@ -1,15 +1,13 @@
 import streamlit as st
 from utils.auth import require_role
 from utils.supabase.db_equipements import *
+from pages.ocr import *
 
 # ── Session ──────────────────────────────────────────
 require_role(["admin", "standard"])
 
-# ── Data ──────────────────────────────────────────
-all_equipments = get_all_equipements()
-filtred_equipments = all_equipments
-
 # ── Functions ──────────────────────────────────────────
+# add manually
 @st.dialog("Add device manually")
 def add_device_manually():
     device_name = st.text_input("Device name*")
@@ -44,20 +42,36 @@ def add_device_manually():
             st.error(errors)
         # mettre des logs de l'erreur
 
+# show device infos
+@st.dialog("Show device infos")
+def show_device_info(device_name, brand, model, serial_number, type, 
+                     status, assigned_user_id, purchase_date, warranty_months, supplier):
+    st.write("**Name:**", device_name)
+    st.write("**Brand:**", brand)
+    st.write("**Model:**", model)
+    st.write("**Serial number:**", serial_number)
+    st.write("**Type:**", type)
+    st.write("**Status:**", status)
+    st.write("**Assigned user:**", assigned_user_id)
+    st.write("**Purchase date:**", purchase_date)
+    st.write("**Warranty months:**", warranty_months)
+    st.write("**Supplier:**", supplier)
+
 # ── Header / Buttons ──────────────────────────────────────────
 
 col_title, col1, col2, col3 = st.columns([5.5, 1.5, 1.5, 1.8], vertical_alignment="center")
 
 with col_title:
     st.markdown("<p style='font-size:2rem; margin:0; font-weight:bold'>🖥️ Equipments</p>", unsafe_allow_html=True)
-    st.markdown("<small>hello world</small>", unsafe_allow_html=True)
+    st.markdown(f"<small>Total devices : {len(global_search(None))}</small>", unsafe_allow_html=True)
 
 with col1:
     if st.button("CSV", icon="📥", use_container_width=True):
         pass
 
 with col2:
-    st.button("Scan", icon="📷", use_container_width=True)
+    if st.button("Scan", icon="📷", use_container_width=True):
+        ocr()
 
 with col3:
     if st.button("Add device", type="primary", width=100):
@@ -65,16 +79,14 @@ with col3:
 
 # ── Search / Filters ──────────────────────────────────────────
 with st.container(border=True, vertical_alignment="center", horizontal=True):
-        
-    # search_options is the selected options
-    search_options = st.multiselect(
-        "Search",
-        ["Test", "Test2"],
-        accept_new_options=True,
-    )
-    """
     
-    """
+    # search_options is the selected options
+    search_option = st.text_input("Search")
+
+    all_equipments = global_search(search_option)
+    filtred_equipments = all_equipments
+
+    # ── Buttons ──────────── 
     # type filter
     type_choice = st.selectbox("Type", ["All", "laptop", "desktop", "server", "other"], accept_new_options=False)
     if type_choice != "All":
@@ -88,43 +100,37 @@ with st.container(border=True, vertical_alignment="center", horizontal=True):
     
     # warranty sort by date
     warranty_sort = st.selectbox("Warranty", ["None", "↑ Expiring soon", "↓ Expiring late"], accept_new_options=False)
-    st.button(label="Reset", icon="🔄️")
+    if st.button(label="Reset", icon="🔄️"):
+        filtred_equipments = [device for device in all_equipments]
 
 # ── Display filter
 with st.container(vertical_alignment="center", horizontal=True):
+    st.write(f"Result number : {len(filtred_equipments)}")
     st.badge(f"Type : {type_choice}")
     st.badge(f"Status : {status_choice}")
 
 # ── Display equipments ──────────────────────────────────────────
+for device in filtred_equipments:
+    status_color = {
+        "active": "#22c55e",
+        "in_stock": "#3b82f6",
+        "in_repair": "#f59e0b",
+        "retired": "#6b7280"
+    }.get(device["status"], "#6b7280")
 
-with st.container(border=False, height=1200):
-    for device in filtred_equipments:
-        status_color = {
-            "active": "#22c55e",
-            "in_stock": "#3b82f6",
-            "in_repair": "#f59e0b",
-            "retired": "#6b7280"
-        }.get(device["status"], "#6b7280") # .get() if no status found, gray
+    with st.container(border=True):
+        col_info, col_status, col_btn = st.columns([6, 2, 1], vertical_alignment="center")
 
-        st.markdown(f"""
-        <div style="
-            border: 1px solid #2d2d2d;
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        ">
-            <div style="display:flex; align-items:center; gap:16px;">
-                <div>
-                    <strong style="font-size:1rem;">{device["name"]}</strong>
-                    <span style="color:#888; font-size:0.8rem; margin-left:8px;">{device["brand"]} · {device["model"]}</span>
-                    <br>
-                    <span style="color:#aaa; font-size:0.75rem;">SN: {device["serial_number"]} · {device["type"]}</span>
-                </div>
-            </div>
-            <div style="display:flex; align-items:center; gap:12px;">
+        with col_info:
+            st.markdown(f"""
+                <strong style="font-size:1rem;">{device["name"]}</strong>
+                <span style="color:#888; font-size:0.8rem; margin-left:8px;">{device["brand"]} · {device["model"]}</span>
+                <br>
+                <span style="color:#aaa; font-size:0.75rem;">SN: {device["serial_number"]} · {device["type"]}</span>
+            """, unsafe_allow_html=True)
+
+        with col_status:
+            st.markdown(f"""
                 <span style="
                     background:{status_color}22;
                     color:{status_color};
@@ -133,6 +139,19 @@ with st.container(border=False, height=1200):
                     padding:2px 10px;
                     font-size:0.75rem;
                 ">{device["status"]}</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
+
+        with col_btn:
+            if st.button("→", key=f"device_{device['id']}"):
+                show_device_info(
+                    device["name"],
+                    device["brand"],
+                    device["model"],
+                    device["serial_number"],
+                    device["type"],
+                    device["status"],
+                    device["assigned_user_id"],
+                    device["purchase_date"],
+                    device["warranty_months"],
+                    device["supplier"]
+                )

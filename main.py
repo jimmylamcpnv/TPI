@@ -27,6 +27,9 @@ if "logged_in" not in st.session_state:
 if "role" not in st.session_state:
     st.session_state.role = None
 
+if "username" not in st.session_state:
+    st.session_state.username = None
+
 # ── Cookies ────────────────────────────────────────
 # initialize the cookies manager
 cookies = EncryptedCookieManager(prefix="serialguard_", password="secret123")
@@ -38,28 +41,33 @@ if not cookies.ready():
 # current page
 current_page = cookies.get("current_page") or "pages/dashboard.py"
 
-
 # if already logged in is in the cookies
 if cookies.get("logged_in") == "true":
     st.session_state.logged_in = True
     st.session_state.role = cookies.get("role")
+    st.session_state.username = cookies.get("username")
 
 # ── Sidebar ────────────────────────────────────────
 # Displayed login button
 with st.sidebar:
     if st.session_state.logged_in:
-        if st.button("logout", icon="🚪"):
-            # session state
-            st.session_state.logged_in = False
-            st.session_state.role = None
+        col1, col2 = st.columns([2, 2], vertical_alignment="center")
+        with col1:
+            st.caption(f"👤 **{st.session_state.username}** / {st.session_state.role}")
 
-            # cookies
-            cookies["logged_in"] = ""
-            cookies["role"] = ""
-            cookies["username"] = ""
-            cookies.save()
+        with col2:
+            if st.button("logout", icon="🚪"):
+                # session state
+                st.session_state.logged_in = False
+                st.session_state.role = None
 
-            st.rerun()
+                # cookies
+                cookies["logged_in"] = ""
+                cookies["role"] = ""
+                cookies["username"] = ""
+                cookies.save()
+
+                st.rerun()
     else:
         if st.button("login", icon="🔐"):
             login_dialog(cookies)
@@ -80,7 +88,7 @@ elif st.session_state.role == "admin":
 
 elif st.session_state.role == "standard":
     pg = st.navigation([
-        st.Page("pages/dashboard.py", title="Dashboard"),
+        st.Page("pages/dashboard.py", title="Dashboard")
     ])
 
 pg.run()

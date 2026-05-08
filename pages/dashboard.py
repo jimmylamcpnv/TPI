@@ -8,14 +8,19 @@ import pandas as pd
 require_role(["admin", "standard"])
 
 # ── Data ──────────────────────────────────────────────
-all_equipments = get_all_equipements()
+all_equipments = global_search(None)
+all_users = get_user_info(None)
 
 # transform into a structure table
 df = pd.DataFrame(all_equipments)
-all_users = get_all_users()
 
-# ───── Equipements
-st.page_link("pages/equipments.py", label="Equipments", icon="🖥️")
+# ───── Equipements ──────────────────────────────────────────
+# ── Stat / if admin ───────────────────────────────────────────
+if st.session_state.role == "admin":
+    st.page_link("pages/equipments.py", label="Equipments", icon="🖥️")
+else:
+    st.markdown("### 🖥️ Equipments")
+
 col1, col2, col3, col4, col5 = st.columns(5, border=True)
 
 col1.metric("Total", len(all_equipments))
@@ -23,7 +28,7 @@ col2.metric("Active", len([device for device in all_equipments if device["status
 col3.metric("In stock", len([device for device in all_equipments if device["status"] == "in_stock"]))
 col4.metric("In repair", len([device for device in all_equipments if device["status"] == "in_repair"]))
 col5.metric("Expired", len([device for device in all_equipments if device["status"] == "expired"]))
-
+        
 # ── Statistics ──────────────────────────────────────
 col1, col2 = st.columns(2, border=True)
 # repartition par type (desktop, laptop, mobile etc..)
@@ -49,13 +54,94 @@ with col2:
     )
     st.plotly_chart(fig_status, use_container_width=True)
 
-col1, col2 = st.columns(2, border=True)
+# ── Display equipments ──────
+with st.container(border=False, height=300):
+    for device in all_equipments:
+        status_color = {
+            "active": "#22c55e",
+            "in_stock": "#3b82f6",
+            "in_repair": "#f59e0b",
+            "retired": "#6b7280"
+        }.get(device["status"], "#6b7280") # .get() if no status found, gray
+
+        st.markdown(f"""
+        <div style="
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        ">
+            <div style="display:flex; align-items:center; gap:16px;">
+                <div>
+                    <strong style="font-size:1rem;">{device["name"]}</strong>
+                    <span style="color:#888; font-size:0.8rem; margin-left:8px;">{device["brand"]} · {device["model"]}</span>
+                    <br>
+                    <span style="color:#aaa; font-size:0.75rem;">SN: {device["serial_number"]} · {device["type"]}</span>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span style="
+                    background:{status_color}22;
+                    color:{status_color};
+                    border:1px solid {status_color};
+                    border-radius:20px;
+                    padding:2px 10px;
+                    font-size:0.75rem;
+                ">{device["status"]}</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+st.divider()
+
+# ───── Users ─────────────────────────────────────────────────
+# ── Stat / if admin ────────────────────────────────────
+if st.session_state.role == "admin":
+    st.page_link("pages/equipments.py", label="Equipments", icon="🖥️")
+else:
+    st.markdown("### 🖥️ Equipments")
+
+# ── Display users ──────
+with st.container(border=False, height=300):
+    for user in all_users:
+        role_color = {
+            "admin": "#f59e0b",
+            "standard": "#3b82f6",
+        }.get(user["role"], "#6b7280")
+
+        st.markdown(f"""
+        <div style="
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        ">
+            <div style="display:flex; align-items:center; gap:16px;">
+                <div>
+                    <strong style="font-size:1rem;">{user["username"]}</strong>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span style="
+                    background:{role_color}22;
+                    color:{role_color};
+                    border:1px solid {role_color};
+                    border-radius:20px;
+                    padding:2px 10px;
+                    font-size:0.75rem;
+                ">{user["role"]}</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
 # garanties (liste de ceux qui vont bientot exiprer)
 
 # Tableau des dernières actions (logs) avec type d'action, utilisateur, date/heure
 
 st.divider()
-
-# ── Export ────────────────────────────────────────────
-st.subheader("Export")
-# Bouton export CSV — grisé pour standard (export en fonction des filtres)
