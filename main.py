@@ -4,6 +4,7 @@ Title       : Serial Guard
 github      : https://github.com/jimmylamcpnv/TPI
 Version     : V2
 Description : 
+
     Serial Guard v2 is a web-based IT asset management application built with Streamlit and Supabase.
 
     It allows organizations to track, manage, and maintain their IT equipment in a structured and reliable way.
@@ -47,6 +48,32 @@ if cookies.get("logged_in") == "true":
     st.session_state.role = cookies.get("role")
     st.session_state.username = cookies.get("username")
 
+# ── Navigation ────────────────────────────────────────
+if not st.session_state.logged_in :
+    pg = st.navigation([
+        st.Page("pages/welcome.py", title="Login")
+        ])
+
+elif st.session_state.role == "admin":
+    pg = st.navigation([
+        st.Page("pages/dashboard.py", title="Dashboard"),
+        st.Page("pages/users.py", title="Users management"),
+        st.Page("pages/equipments.py", title="Equipments management"),
+        st.Page("pages/logs.py", title="Logs"),
+        st.Page("pages/parameters.py", title="Parameters", visibility="hidden")
+    ])
+
+elif st.session_state.role == "standard":
+    pg = st.navigation([
+        st.Page("pages/dashboard.py", title="Dashboard"),
+        st.Page("pages/parameters.py", title="Parameters", visibility="hidden")
+    ])
+elif st.session_state.logged_in :
+    pg = st.navigation([
+        st.Page("pages/dashboard.py", title="Dashboard"),
+        st.Page("pages/parameters.py", title="Parameters", visibility="hidden")
+    ])
+
 # ── Sidebar ────────────────────────────────────────
 # Displayed login button
 with st.sidebar:
@@ -56,7 +83,7 @@ with st.sidebar:
             st.caption(f"👤 **{st.session_state.username}** / {st.session_state.role}")
 
         with col2:
-            if st.button("logout", icon="🚪"):
+            if st.button("logout", icon="🚪", type="primary"):
                 # session state
                 st.session_state.logged_in = False
                 st.session_state.role = None
@@ -68,27 +95,11 @@ with st.sidebar:
                 cookies.save()
 
                 st.rerun()
+                
+        with st.container():
+            st.page_link("pages/parameters.py", label="Parameters", icon="⚙️")
     else:
         if st.button("login", icon="🔐"):
             login_dialog(cookies)
-
-# navigation based on the role
-if not st.session_state.logged_in :
-    pg = st.navigation([
-        st.Page("pages/welcome.py", title="Login")
-        ])
-
-elif st.session_state.role == "admin":
-    pg = st.navigation([
-        st.Page("pages/dashboard.py", title="Dashboard"),
-        st.Page("pages/users.py", title="Users management"),
-        st.Page("pages/equipments.py", title="Equipments management"),
-        st.Page("pages/logs.py", title="Logs")
-    ])
-
-elif st.session_state.role == "standard":
-    pg = st.navigation([
-        st.Page("pages/dashboard.py", title="Dashboard")
-    ])
 
 pg.run()

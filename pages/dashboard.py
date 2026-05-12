@@ -100,9 +100,9 @@ st.divider()
 # ───── Users ─────────────────────────────────────────────────
 # ── Stat / if admin ────────────────────────────────────
 if st.session_state.role == "admin":
-    st.page_link("pages/equipments.py", label="Equipments", icon="🖥️")
+    st.page_link("pages/users.py", label="Users", icon="🙎‍♂️")
 else:
-    st.markdown("### 🖥️ Equipments")
+    st.markdown("###🙎‍♂️ Users management")
 
 # ── Display users ──────
 with st.container(border=False, height=300):

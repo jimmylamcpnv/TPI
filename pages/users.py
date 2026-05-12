@@ -2,7 +2,9 @@ import streamlit as st
 from utils.auth import require_role
 from utils.supabase.db_equipements import *
 from pages.ocr import *
-
+"""
+faire un diagramme de flux pour cette page
+"""
 # ── Session ──────────────────────────────────────────
 require_role("admin")
 
@@ -10,22 +12,25 @@ require_role("admin")
 all_users = get_user_info(None)
 
 # ── Functions ──────────────────────────────────────────
-# add manually
+# ── add manually
 @st.dialog("Add user manually")
 def add_user_manually():
-    username = st.text_input("Entet a username")
-    password = st.text_input("Enter a password")
-    confirm_password = st.text_input("Confirm your password")
-    role = st.text_input("Choose a role for {username}")
+    username = st.text_input("Entet a username*")
+    password = st.text_input("Enter a password*", type="password")
+    confirm_password = st.text_input("Confirm your password*", type="password")
+    
+    # if the password is not the same
+    if password != confirm_password:
+        st.warning("password not the same")
+        st.stop()
+
+    # checkbox to make the user admin or not
+    role = "admin" if st.checkbox("Admin") else "standard"
 
     if st.button(label="Submit"):
         errors = []
         try:
-            create_user(
-                username,
-                password,
-                role
-                )
+            create_user(username, password, role)
             st.success(f"{username} has been added to supabase !")
 
         except ValueError as error:
@@ -33,11 +38,69 @@ def add_user_manually():
             st.error(errors)
         # mettre des logs de l'erreur
 
-# show user infos
+# ── edit user datas
+@st.dialog("Edit user datas")
+def edit_user(user):
+    with st.container(border=True):
+        new_username = st.text_input("Username", value = user["username"])
+        new_role = "admin" if st.checkbox("Admin", value = user["role"] == "admin") else "standard" # user["role"] == "admin" return True or False
+    
+    # button save
+    with st.container(border=False, horizontal_alignment="right"):
+        if st.button("Save"):
+            errors = []
+            try:
+                update_user(user["username"], new_username, new_role)
+                st.success("modifications has been saved successfully")
+
+            except ValueError as error:
+                errors.append(str(error))
+                st.error(errors)
+
+# ── show user infos
 @st.dialog("Show user infos")
-def show_user_info(username):
-    st.write(f"Username : {user["username"]}")
-    st.write(f"Role : {user["role"]}")
+def show_user_info(user):
+    role_color = {
+        "admin": "orange",
+        "standard": "blue",
+    }.get(user["role"], "gray")
+
+    # container for username and role
+    with st.container(horizontal=True):
+        st.subheader((user["username"]))
+        st.badge(user["role"], color=role_color)
+
+    # container for logs
+    with st.container(border=True):
+        st.subheader("Logs")
+        st.divider()
+
+        st.caption("test logs")
+
+    # container for buttons
+    with st.container(horizontal=True):
+        # delete button
+        with st.container(horizontal_alignment="left"):
+            if st.button("Delete", type="primary"):
+                errors = []
+                try:
+                    delete_user(user["username"])
+                    st.success(f"User {user["username"]} has been deleted")
+
+                except ValueError as error:
+                    errors.append(error)
+                    st.error(errors)
+        
+        # edit button
+        with st.container(horizontal_alignment="right"):
+            if st.button("Edit"):
+                st.session_state["edit_user_target"] = user
+                st.rerun()
+
+# store user's data of edited user, not the logged one
+if "edit_user_target" in st.session_state:
+    user_to_edit = st.session_state.pop("edit_user_target")
+    edit_user(user_to_edit)
 
 # ── Header / Buttons ──────────────────────────────────────────
 col_title, col1 = st.columns([8, 1.8], vertical_alignment="center")
@@ -47,7 +110,7 @@ with col_title:
     st.markdown(f"<small>Total users : {len(all_users)}</small>", unsafe_allow_html=True)
 
 with col1:
-    if st.button("Add user", type="primary", width=100):
+    if st.button("Add user", type="secondary", width=100):
         add_user_manually()
 
 # ── Search / Filters ──────────────────────────────────────────
@@ -100,4 +163,4 @@ for user in filtered_users:
 
         with col_btn:
             if st.button("→", key=f"user_{user['id']}"):
-                show_user_info(user["username"])
+                show_user_info(user)

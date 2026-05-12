@@ -53,7 +53,5 @@ def update_equipments(id, device_name, brand, model, serial_number, type, status
     }).eq("id", id).execute()
 
 # ── DELETE ────────────────────────────────────────
-def delete_equipment(username):
-    user = get_user_info(username)
-    id = user[0]["id"]
-    supabase.table("users").delete().eq("id", id).execute()
+def delete_equipment(serial_number):
+    supabase.table("equipments").delete().eq("serial_number", serial_number).execute()

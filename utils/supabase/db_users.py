@@ -24,17 +24,26 @@ def get_user_info(username):
 
 # ── UPDATE ────────────────────────────────────────
 # update user datas
-def update_user(username, role):
-    supabase.table("users").update({
-        "username"  : username,
+def update_user(actual_username, new_username, role):
+    user = get_user_info(actual_username)
+
+    if not user:
+        raise ValueError(f"User '{actual_username}' not found")
+
+    id = int(user[0]["id"])
+
+    response = supabase.table("users").update({
+        "username"  : new_username,
         "role"      : role
-    }
-    )
+    }).eq("id", id).execute()
+
+    return response.data
 
 # modifier le mdp du user via le id
 def update_password(username, new_password):
     user = get_user_info(username)
     id = user[0]["id"]
+
     supabase.table("users").update({
         "password_hash": bcrypt.hashpw(new_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
     }).eq("id", id).execute()
