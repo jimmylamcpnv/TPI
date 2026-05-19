@@ -60,6 +60,7 @@ def edit_user(user):
 # ── show user infos
 @st.dialog("Show user infos")
 def show_user_info(user):
+
     role_color = {
         "admin": "orange",
         "standard": "blue",
@@ -73,10 +74,25 @@ def show_user_info(user):
     # container for logs
     with st.container(border=True):
         st.subheader("Logs")
-        st.divider()
 
-        st.caption("test logs")
+        logs = supabase.table("activity_logs") \
+            .select("*, equipments(name)") \
+            .eq("user_id", user["id"]) \
+            .order("created_at", desc=True) \
+            .limit(20) \
+            .execute().data
 
+        if not logs:
+            st.caption("nothing here")
+
+        for log in logs:
+            equipment  = log["equipments"]["name"] if log["equipments"] else "—"
+            log_date   = log["created_at"][:16].replace("T", " ")
+            action     = log["action"]
+            details    = log["details"] or {}
+            details_str = "  ·  ".join(f"{k} : {v}" for k, v in details.items())
+            st.caption(f"{log_date}  ·  {action}  ·  {equipment}  ·  {details_str}")
+    
     # container for buttons
     with st.container(horizontal=True):
         # delete button

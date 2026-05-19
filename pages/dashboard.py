@@ -6,6 +6,8 @@ import pandas as pd
 
 # ── Guard ──────────────────────────────────────────
 require_role(["admin", "standard"])
+st.write("role:", st.session_state.get("role"))
+st.write("logged_in:", st.session_state.get("logged_in"))
 
 # ── Data ──────────────────────────────────────────────
 all_equipments = global_search(None)

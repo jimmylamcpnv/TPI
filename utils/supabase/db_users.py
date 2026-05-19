@@ -1,26 +1,33 @@
 from utils.supabase.db_connexion import supabase
+from utils.logger import log_action
 import bcrypt
 
 # Users
-"""
-.eq() = where
-"""
 # ── CREATE ────────────────────────────────────────
 # create a user (username, password, role)
 def create_user(username, password, role):
     supabase.table("users").insert({
-        "username": username,
+        "username":      username,
         "password_hash": bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8"),
-        "role": role
+        "role":          role
     }).execute()
 
+    # log the creation
+    log_action("create_user", details={"username": username, "role": role})
+
 # ── READ ──────────────────────────────────────────
-# get all info abount a user with the username
+# get all info about a user with the username
 def get_user_info(username):
-    if not username:
+    if username:
+        return supabase.table("users").select("*").ilike("username", f"%{username}%").execute().data
+    else:
         return supabase.table("users").select("*").execute().data
-    
-    return supabase.table("users").select("*").ilike("username", f"%{username}%").execute().data
+
+def get_username_from_id(id):
+    if id:
+        return supabase.table("users").select("username").eq("id", id).execute().data
+    else:
+        return None
 
 # ── UPDATE ────────────────────────────────────────
 # update user datas
@@ -33,24 +40,34 @@ def update_user(actual_username, new_username, role):
     id = int(user[0]["id"])
 
     response = supabase.table("users").update({
-        "username"  : new_username,
-        "role"      : role
+        "username": new_username,
+        "role":     role
     }).eq("id", id).execute()
+
+    # log the update
+    log_action("update_user", details={"old_username": actual_username, "new_username": new_username, "role": role})
 
     return response.data
 
-# modifier le mdp du user via le id
+# update the password via user id
 def update_password(username, new_password):
     user = get_user_info(username)
-    id = user[0]["id"]
+    id   = user[0]["id"]
 
     supabase.table("users").update({
         "password_hash": bcrypt.hashpw(new_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
     }).eq("id", id).execute()
 
+    # log the password update
+    log_action("update_password", details={"username": username})
+
 # ── DELETE ────────────────────────────────────────
-# supprimer le user via le id
+# delete user via id
 def delete_user(username):
     user = get_user_info(username)
-    id = user[0]["id"]
+    id   = user[0]["id"]
+
     supabase.table("users").delete().eq("id", id).execute()
+
+    # log the deletion
+    log_action("delete_user", details={"username": username})

@@ -44,9 +44,11 @@ current_page = cookies.get("current_page") or "pages/dashboard.py"
 
 # if already logged in is in the cookies
 if cookies.get("logged_in") == "true":
-    st.session_state.logged_in = True
-    st.session_state.role = cookies.get("role")
-    st.session_state.username = cookies.get("username")
+    st.session_state.logged_in  = True
+    st.session_state.role       = cookies.get("role")
+    st.session_state.username   = cookies.get("username")
+    user_id = cookies.get("user_id")
+    st.session_state["user_id"] = int(user_id) if user_id else None
 
 # ── Navigation ────────────────────────────────────────
 if not st.session_state.logged_in :
@@ -71,7 +73,7 @@ elif st.session_state.role == "standard":
 elif st.session_state.logged_in :
     pg = st.navigation([
         st.Page("pages/dashboard.py", title="Dashboard"),
-        st.Page("pages/parameters.py", title="Parameters", visibility="hidden")
+        st.Page("pages/parameters.py", title="Parameters")
     ])
 
 # ── Sidebar ────────────────────────────────────────
@@ -92,6 +94,7 @@ with st.sidebar:
                 cookies["logged_in"] = ""
                 cookies["role"] = ""
                 cookies["username"] = ""
+                cookies["user_id"] = ""
                 cookies.save()
 
                 st.rerun()

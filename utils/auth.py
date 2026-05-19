@@ -26,14 +26,21 @@ def login_dialog(cookies):
             # compare if it correspond
             if bcrypt.checkpw(password_input.encode("utf-8"), password_hash):
                 # session state
-                st.session_state.logged_in = True
-                st.session_state.role = user[0]["role"]
-                st.session_state.username = user[0]["username"]
+                st.session_state.logged_in      = True
+                st.session_state.role           = user[0]["role"]
+                st.session_state.username       = user[0]["username"]
+                st.session_state["user_id"]     = user[0]["id"]
 
                 # cookies
                 cookies["logged_in"] = "true"
-                cookies["role"] = user[0]["role"]
-                cookies["username"] = user[0]["username"]
+                cookies["role"]      = user[0]["role"]
+                cookies["username"]  = user[0]["username"]
+                cookies["user_id"]   = str(user[0]["id"])
+                cookies.save()
+
+                # log
+                from utils.logger import log_action
+                log_action("login_success")
 
                 st.success("You are now log in")
                 st.rerun()
