@@ -5,7 +5,6 @@ from utils.logger import log_action
 # Equipements
 # ── READ ──────────────────────────────────────────
 def global_search(search_option):
-    # if no result, display everything
     if not search_option:
         return supabase.table("equipments").select("*").execute().data
     
@@ -39,9 +38,15 @@ def create_equipment(device_name, brand, model, serial_number, type, status, ass
         "supplier":         supplier
     }).execute()
 
-    # log the creation
     new_id = result.data[0]["id"]
     log_action("create_equipment", new_id, {"serial_number": serial_number})
+
+    # log assignment if a user was assigned at creation
+    if assigned_user_id:
+        log_action("assign_equipment", equipment_id=new_id, details={
+            "old_user_id": None,
+            "new_user_id": assigned_user_id,
+        })
 
 # ── UPDATE ────────────────────────────────────────
 def update_equipments(device_name, brand, model, serial_number, type, status, assigned_user_id, purchase_date, warranty_months, supplier, original_serial_number):
@@ -77,9 +82,17 @@ def update_equipments(device_name, brand, model, serial_number, type, status, as
     # log with all changes
     log_action("update_equipment", equipment_id=equipment_id, details=changes)
 
+    # log assignment separately if the assigned user changed
+    old_assigned = str(old[0].get("assigned_user_id"))
+    new_assigned  = str(assigned_user_id)
+    if old_assigned != new_assigned:
+        log_action("assign_equipment", equipment_id=equipment_id, details={
+            "old_user_id": old[0].get("assigned_user_id"),
+            "new_user_id": assigned_user_id,
+        })
+
 # ── DELETE ────────────────────────────────────────
 def delete_equipment(serial_number):
-    # result of the equipment sort by serial number
     result = supabase.table("equipments")\
         .select("id")\
         .eq("serial_number", serial_number)\
@@ -88,17 +101,15 @@ def delete_equipment(serial_number):
     
     equipment_id = result.data["id"]
 
-    # logs
     log_action(
         equipment_id=equipment_id,
         action="delete_equipment",
         details={
             "serial_number": serial_number,
             "equipment_id": equipment_id
-    }
+        }
     )
 
-    # delete
     supabase.table("equipments")\
         .delete()\
         .eq("serial_number", serial_number)\
