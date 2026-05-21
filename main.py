@@ -20,6 +20,7 @@ Description :
 import streamlit as st
 from streamlit_cookies_manager import EncryptedCookieManager
 from utils.auth import *
+import os
 
 # ── Session ────────────────────────────────────────
 if "logged_in" not in st.session_state:
@@ -33,7 +34,7 @@ if "username" not in st.session_state:
 
 # ── Cookies ────────────────────────────────────────
 # initialize the cookies manager
-cookies = EncryptedCookieManager(prefix="serialguard_", password="secret123")
+cookies = EncryptedCookieManager(prefix="serialguard_", password=os.environ.get("COOKIE_SECRET", "changeme"))
 
 # if cookies is not raedy, the rest of the script doesn't load
 if not cookies.ready():
