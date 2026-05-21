@@ -1,7 +1,7 @@
 import streamlit as st
 import bcrypt
 from utils.supabase.db_users import *
-
+from utils.logger import *
 """
 Prendre username et password en entrée
 Chercher l'utilisateur dans Supabase par username
@@ -39,14 +39,15 @@ def login_dialog(cookies):
                 cookies.save()
 
                 # log
-                from utils.logger import log_action
                 log_action("login_success")
 
                 st.success("You are now log in")
                 st.rerun()
             else:
+                log_action("login_failed")
                 st.error("Password is incorrect")
         else:
+            log_action("login_failed")
             st.error("username is incorrect or does not exist.")
 
 # function to allow navigation

@@ -2,11 +2,9 @@ import streamlit as st
 from utils.auth import require_role
 from utils.supabase.db_equipements import *
 from pages.ocr import *
-"""
-faire un diagramme de flux pour cette page
-"""
+
 # ── Session ──────────────────────────────────────────
-require_role("admin")
+require_role(["admin"])
 
 # ── Data ──────────────────────────────────────────
 all_users = get_user_info(None)
