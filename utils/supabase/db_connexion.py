@@ -1,6 +1,6 @@
-import os
+import streamlit as st
 from supabase import create_client, Client
 
-url = "https://jzpkojunkzsjijwemqvi.supabase.co"
-key = "sb_publishable_paDQ1yWHah68_2BRML7HgA_oICCplk3"
+url = st.secrets["SUPABASE_URL"]
+key = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(url, key)

@@ -7,10 +7,6 @@ from utils.auth import require_role
 from utils.supabase.db_equipements import *
 from pages.ocr import *
 
-"""
-- ameliorer ocr
-"""
-
 # ── Session ───────────────────────────────────────────────────
 require_role(["admin", "standard"])
 
@@ -70,18 +66,19 @@ def add_device_manually():
                     serial_number,
                     type[0],
                     status[0],
-                    resolved_user_id["id"] or None,
+                    resolved_user_id["id"] if resolved_user_id else None,
                     purchase_date.isoformat() if purchase_date else None,
                     warranty_months or None,
                     supplier or None,
                 )
                 st.success(f"{device_name} has been added to supabase !")
 
-            except ValueError as error:
-                errors.append(str(error))
-                st.error(errors)
-            # mettre des logs de l'erreur
-
+            except Exception as error:
+                # duplicate serial number
+                if "duplicate key" in str(error) or "23505" in str(error):
+                    st.error(f"Serial number already exists in the database")
+                else:
+                    st.error(str(error))
 
 @st.dialog("Edit device datas")
 def update_equipment(device):
